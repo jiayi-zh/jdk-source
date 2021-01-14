@@ -376,6 +376,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      * Returns a power of two size for the given target capacity.
      */
     static final int tableSizeFor(int cap) {
+        // 该算法将最高位的1后面的位全变为1
         int n = cap - 1;
         n |= n >>> 1;
         n |= n >>> 2;
