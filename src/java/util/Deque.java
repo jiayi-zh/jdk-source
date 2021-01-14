@@ -190,8 +190,7 @@ package java.util;
  * @since  1.6
  * @param <E> the type of elements held in this collection
  */
-public interface Deque<E> extends Queue<E> {
-    /**
+public interface Deque<E> extends Queue<E> {    /**
      * Inserts the specified element at the front of this deque if it is
      * possible to do so immediately without violating capacity restrictions,
      * throwing an {@code IllegalStateException} if no space is currently
@@ -208,7 +207,7 @@ public interface Deque<E> extends Queue<E> {
      * @throws IllegalArgumentException if some property of the specified
      *         element prevents it from being added to this deque
      */
-    void addFirst(E e);
+    void addFirst(E e); // 添加首元素，如果违背了容量限制，则抛出异常
 
     /**
      * Inserts the specified element at the end of this deque if it is
@@ -229,7 +228,7 @@ public interface Deque<E> extends Queue<E> {
      * @throws IllegalArgumentException if some property of the specified
      *         element prevents it from being added to this deque
      */
-    void addLast(E e);
+    void addLast(E e); // 追加尾元素，如果违背了容量限制，则抛出异常
 
     /**
      * Inserts the specified element at the front of this deque unless it would
@@ -247,7 +246,7 @@ public interface Deque<E> extends Queue<E> {
      * @throws IllegalArgumentException if some property of the specified
      *         element prevents it from being added to this deque
      */
-    boolean offerFirst(E e);
+    boolean offerFirst(E e); // 添加首元素，如果违背了容量限制，则返回false
 
     /**
      * Inserts the specified element at the end of this deque unless it would
@@ -265,7 +264,7 @@ public interface Deque<E> extends Queue<E> {
      * @throws IllegalArgumentException if some property of the specified
      *         element prevents it from being added to this deque
      */
-    boolean offerLast(E e);
+    boolean offerLast(E e); // 追加尾元素，如果违背了容量限制，则返回false
 
     /**
      * Retrieves and removes the first element of this deque.  This method
@@ -275,7 +274,7 @@ public interface Deque<E> extends Queue<E> {
      * @return the head of this deque
      * @throws NoSuchElementException if this deque is empty
      */
-    E removeFirst();
+    E removeFirst(); // 移除首元素，如果队列为空则抛出异常
 
     /**
      * Retrieves and removes the last element of this deque.  This method
@@ -452,7 +451,7 @@ public interface Deque<E> extends Queue<E> {
      * @return the first element of this deque, or {@code null} if
      *         this deque is empty
      */
-    E poll();
+    E poll(); // 获取队列首元素并移除
 
     /**
      * Retrieves, but does not remove, the head of the queue represented by
@@ -477,7 +476,7 @@ public interface Deque<E> extends Queue<E> {
      * @return the head of the queue represented by this deque, or
      *         {@code null} if this deque is empty
      */
-    E peek();
+    E peek(); // 获取首元素但不删除
 
 
     // *** Stack methods ***

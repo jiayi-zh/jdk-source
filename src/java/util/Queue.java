@@ -159,7 +159,7 @@ public interface Queue<E> extends Collection<E> {
      * @throws IllegalArgumentException if some property of this element
      *         prevents it from being added to this queue
      */
-    boolean add(E e);
+    boolean add(E e); // 将元素添加到队列中，如果违背了容量限制，则抛出异常
 
     /**
      * Inserts the specified element into this queue if it is possible to do
@@ -178,7 +178,7 @@ public interface Queue<E> extends Collection<E> {
      * @throws IllegalArgumentException if some property of this element
      *         prevents it from being added to this queue
      */
-    boolean offer(E e);
+    boolean offer(E e); // 将元素添加到队列中，如果违背了容量限制，则返回false
 
     /**
      * Retrieves and removes the head of this queue.  This method differs
@@ -188,7 +188,7 @@ public interface Queue<E> extends Collection<E> {
      * @return the head of this queue
      * @throws NoSuchElementException if this queue is empty
      */
-    E remove();
+    E remove(); // 移除队列的首元素，如果队列为空, 则抛出异常
 
     /**
      * Retrieves and removes the head of this queue,
@@ -196,7 +196,7 @@ public interface Queue<E> extends Collection<E> {
      *
      * @return the head of this queue, or {@code null} if this queue is empty
      */
-    E poll();
+    E poll(); // 移除队列的首元素，如果队列为空, 则返回null
 
     /**
      * Retrieves, but does not remove, the head of this queue.  This method
@@ -206,7 +206,7 @@ public interface Queue<E> extends Collection<E> {
      * @return the head of this queue
      * @throws NoSuchElementException if this queue is empty
      */
-    E element();
+    E element(); // 检索并返回队列的首元素，如果队列为空则抛出异常
 
     /**
      * Retrieves, but does not remove, the head of this queue,
@@ -214,5 +214,5 @@ public interface Queue<E> extends Collection<E> {
      *
      * @return the head of this queue, or {@code null} if this queue is empty
      */
-    E peek();
+    E peek(); // 检索并返回队列的首元素，如果队列为空则返回null
 }
