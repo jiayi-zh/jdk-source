@@ -166,13 +166,13 @@ public class LockSupport {
      * for example, the interrupt status of the thread upon return.
      *
      * @param blocker the synchronization object responsible for this
-     *        thread parking
+     *        thread parking // 挂起前设置blocker给{@link Thread#parkBlocker}，唤醒后将其置空，用于传递参数
      * @since 1.6
      */
     public static void park(Object blocker) {
         Thread t = Thread.currentThread();
         setBlocker(t, blocker);
-        UNSAFE.park(false, 0L);
+        UNSAFE.park(false, 0L); // 线程会阻塞在这里
         setBlocker(t, null);
     }
 

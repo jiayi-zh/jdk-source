@@ -228,7 +228,7 @@ public interface Condition {
      * @throws InterruptedException if the current thread is interrupted
      *         (and interruption of thread suspension is supported)
      */
-    void await() throws InterruptedException;
+    void await() throws InterruptedException; // 当前线程阻塞直到唤醒或者中断
 
     /**
      * Causes the current thread to wait until it is signalled.
@@ -465,7 +465,7 @@ public interface Condition {
      * not held. Typically, an exception such as {@link
      * IllegalMonitorStateException} will be thrown.
      */
-    void signal();
+    void signal(); // 唤醒等待这个条件的线程，唤醒的线程需要重新抢占锁
 
     /**
      * Wakes up all waiting threads.
@@ -483,5 +483,5 @@ public interface Condition {
      * not held. Typically, an exception such as {@link
      * IllegalMonitorStateException} will be thrown.
      */
-    void signalAll();
+    void signalAll();// 唤醒所有等待这个条件的线程，唤醒的线程需要重新抢占锁
 }

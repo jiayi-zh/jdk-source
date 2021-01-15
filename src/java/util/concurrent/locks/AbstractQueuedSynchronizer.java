@@ -502,7 +502,7 @@ public abstract class AbstractQueuedSynchronizer
         Node() {    // Used to establish initial head or SHARED marker
         }
 
-        Node(Thread thread, Node mode) {     // Used by addWaiter
+        Node(Thread thread, Node mode) {     // Used by addWaiter // 添加CLH
             this.nextWaiter = mode;
             this.thread = thread;
         }
@@ -1848,11 +1848,11 @@ public abstract class AbstractQueuedSynchronizer
         private Node addConditionWaiter() {
             Node t = lastWaiter;
             // If lastWaiter is cancelled, clean out.
-            if (t != null && t.waitStatus != Node.CONDITION) {
+            if (t != null && t.waitStatus != Node.CONDITION) { // 如果最后一个waiter的状态不是CONDITION, 则清理掉队列所有状态不为CONDITION的waiter
                 unlinkCancelledWaiters();
                 t = lastWaiter;
             }
-            Node node = new Node(Thread.currentThread(), Node.CONDITION);
+            Node node = new Node(Thread.currentThread(), Node.CONDITION); // 将当前线程加入Waiter队列
             if (t == null)
                 firstWaiter = node;
             else
@@ -2032,8 +2032,8 @@ public abstract class AbstractQueuedSynchronizer
         public final void await() throws InterruptedException {
             if (Thread.interrupted())
                 throw new InterruptedException();
-            Node node = addConditionWaiter();
-            int savedState = fullyRelease(node);
+            Node node = addConditionWaiter(); // 将当前线程封装为waiter node并添加到等待队列
+            int savedState = fullyRelease(node); // TODO
             int interruptMode = 0;
             while (!isOnSyncQueue(node)) {
                 LockSupport.park(this);
