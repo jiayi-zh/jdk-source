@@ -135,7 +135,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
                     return true;
                 }
             }
-            else if (current == getExclusiveOwnerThread()) {
+            else if (current == getExclusiveOwnerThread()) { // 这里只有持有锁的线程才可以重入, 其他线程都会加锁失败
                 int nextc = c + acquires;
                 if (nextc < 0) // overflow
                     throw new Error("Maximum lock count exceeded");
@@ -147,7 +147,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 
         protected final boolean tryRelease(int releases) {
             int c = getState() - releases;
-            if (Thread.currentThread() != getExclusiveOwnerThread())
+            if (Thread.currentThread() != getExclusiveOwnerThread()) // 只有持有锁的线程才可以释放锁
                 throw new IllegalMonitorStateException();
             boolean free = false;
             if (c == 0) {
@@ -203,10 +203,10 @@ public class ReentrantLock implements Lock, java.io.Serializable {
          * acquire on failure.
          */
         final void lock() {
-            if (compareAndSetState(0, 1))
-                setExclusiveOwnerThread(Thread.currentThread());
+            if (compareAndSetState(0, 1)) // CAS尝试获取锁, state 0 -> 1
+                setExclusiveOwnerThread(Thread.currentThread()); // 获取成功, 设置持有线程为当前线程
             else
-                acquire(1);
+                acquire(1); // 获取失败, 走尝试获取锁流程
         }
 
         protected final boolean tryAcquire(int acquires) {
@@ -232,13 +232,13 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             final Thread current = Thread.currentThread();
             int c = getState();
             if (c == 0) {
-                if (!hasQueuedPredecessors() &&
-                    compareAndSetState(0, acquires)) {
-                    setExclusiveOwnerThread(current);
+                if (!hasQueuedPredecessors() && // 判断当前线程是不是CLH队列中的第一个线程
+                    compareAndSetState(0, acquires)) { // 如果是 则设置锁状态
+                    setExclusiveOwnerThread(current); // 设置当前线程为锁持有线程
                     return true;
                 }
             }
-            else if (current == getExclusiveOwnerThread()) {
+            else if (current == getExclusiveOwnerThread()) { // 锁还被持有, 只有持有锁的线程可以重入
                 int nextc = c + acquires;
                 if (nextc < 0)
                     throw new Error("Maximum lock count exceeded");
