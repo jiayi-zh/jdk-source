@@ -643,7 +643,7 @@ public abstract class AbstractQueuedSynchronizer
          */
         int ws = node.waitStatus;
         if (ws < 0)
-            compareAndSetWaitStatus(node, ws, 0);
+            compareAndSetWaitStatus(node, ws, 0); // 如果 waitStatus < 0, 则将当前节点清零
 
         /*
          * Thread to unpark is held in successor, which is normally
@@ -652,14 +652,14 @@ public abstract class AbstractQueuedSynchronizer
          * non-cancelled successor.
          */
         Node s = node.next;
-        if (s == null || s.waitStatus > 0) {
+        if (s == null || s.waitStatus > 0) { // 若后续节点为空或已被cancel，则从尾部开始找到队列中第一个waitStatus<=0，即未被cancel的节点
             s = null;
             for (Node t = tail; t != null && t != node; t = t.prev)
                 if (t.waitStatus <= 0)
                     s = t;
         }
         if (s != null)
-            LockSupport.unpark(s.thread);
+            LockSupport.unpark(s.thread); // 唤醒线程
     }
 
     /**
@@ -815,7 +815,7 @@ public abstract class AbstractQueuedSynchronizer
              * need a signal, but don't park yet.  Caller will need to
              * retry to make sure it cannot acquire before parking.
              */
-            compareAndSetWaitStatus(pred, ws, Node.SIGNAL);
+            compareAndSetWaitStatus(pred, ws, Node.SIGNAL); // 将前置节点 waitStatus 修改为 Node.SIGNAL, 下次循环时可传播
         }
         return false;
     }
@@ -860,14 +860,14 @@ public abstract class AbstractQueuedSynchronizer
             boolean interrupted = false; // 线程中断标志位, 只有线程被 interrupt 才会导致此方法返回false
             for (;;) {
                 final Node p = node.predecessor();
-                if (p == head && tryAcquire(arg)) {
-                    setHead(node);
+                if (p == head && tryAcquire(arg)) { // 如果当前线程是head的直接后继则尝试获取锁, 这里不会和等待队列中其它线程发生竞争，但会和尝试获取锁并且未进入等待队列的线程发生竞争, 这是非公平锁和公平锁的一个重要区别
+                    setHead(node); // 将当前结点设置为头结点
                     p.next = null; // help GC
                     failed = false;
                     return interrupted;
-                }
-                if (shouldParkAfterFailedAcquire(p, node) &&
-                    parkAndCheckInterrupt())
+                }  // 如果不是head直接后继或获取锁失败，则检查是否要阻塞当前线程,是则阻塞当前线程
+                if (shouldParkAfterFailedAcquire(p, node) && // 根据prev的等待状态判断是否需要阻塞当前线程
+                    parkAndCheckInterrupt()) // 阻塞当前线程
                     interrupted = true;
             }
         } finally {
@@ -1258,10 +1258,10 @@ public abstract class AbstractQueuedSynchronizer
      * @return the value returned from {@link #tryRelease}
      */
     public final boolean release(int arg) {
-        if (tryRelease(arg)) { // 调用子类重写的 tryRelease 方法
+        if (tryRelease(arg)) { // 调用子类重写的 tryRelease 方法, 返回 true 表示释放锁, 需要唤醒CLH队列下一个节点
             Node h = head;
             if (h != null && h.waitStatus != 0)
-                unparkSuccessor(h);
+                unparkSuccessor(h); // 唤醒后继节点
             return true;
         }
         return false;
@@ -1509,7 +1509,7 @@ public abstract class AbstractQueuedSynchronizer
      *         is at the head of the queue or the queue is empty
      * @since 1.7
      */
-    public final boolean hasQueuedPredecessors() {
+    public final boolean hasQueuedPredecessors() { // 等待队列中第一个元素不是当前线程并且队列中有排队的线程
         // The correctness of this depends on head being initialized
         // before tail and on head.next being accurate if the current
         // thread is first in queue.

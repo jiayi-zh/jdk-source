@@ -346,17 +346,17 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
              * signalled if it ever changes from capacity. Similarly
              * for all other uses of count in other wait guards.
              */
-            while (count.get() == capacity) {
+            while (count.get() == capacity) { // 如果当前队列成员数等于容量数, 则阻塞当前线程
                 notFull.await();
             }
-            enqueue(node);
+            enqueue(node); // 尾插当前节点
             c = count.getAndIncrement();
-            if (c + 1 < capacity)
+            if (c + 1 < capacity) // 如果发现还有空余容量会唤醒所有 put 线程
                 notFull.signal();
         } finally {
             putLock.unlock();
         }
-        if (c == 0)
+        if (c == 0) // TODO 这里不是很理解
             signalNotEmpty();
     }
 
@@ -438,13 +438,13 @@ public class LinkedBlockingQueue<E> extends AbstractQueue<E>
         final ReentrantLock takeLock = this.takeLock;
         takeLock.lockInterruptibly();
         try {
-            while (count.get() == 0) {
+            while (count.get() == 0) { // 如果队列为空, 则阻塞所有 take() 线程
                 notEmpty.await();
             }
-            x = dequeue();
+            x = dequeue(); // 出队
             c = count.getAndDecrement();
             if (c > 1)
-                notEmpty.signal();
+                notEmpty.signal(); // 唤
         } finally {
             takeLock.unlock();
         }
