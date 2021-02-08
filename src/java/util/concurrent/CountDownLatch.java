@@ -170,7 +170,7 @@ public class CountDownLatch {
         }
 
         protected int tryAcquireShared(int acquires) {
-            return (getState() == 0) ? 1 : -1;
+            return (getState() == 0) ? 1 : -1; // state == 0 ? 加锁成功 : 加锁失败
         }
 
         protected boolean tryReleaseShared(int releases) {

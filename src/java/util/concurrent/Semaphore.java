@@ -179,7 +179,7 @@ public class Semaphore implements java.io.Serializable {
                 int available = getState();
                 int remaining = available - acquires;
                 if (remaining < 0 ||
-                    compareAndSetState(available, remaining))
+                    compareAndSetState(available, remaining)) // 直接尝试获取锁
                     return remaining;
             }
         }
@@ -190,7 +190,7 @@ public class Semaphore implements java.io.Serializable {
                 int next = current + releases;
                 if (next < current) // overflow
                     throw new Error("Maximum permit count exceeded");
-                if (compareAndSetState(current, next))
+                if (compareAndSetState(current, next)) // 增加可用信号量
                     return true;
             }
         }
@@ -242,12 +242,12 @@ public class Semaphore implements java.io.Serializable {
 
         protected int tryAcquireShared(int acquires) {
             for (;;) {
-                if (hasQueuedPredecessors())
+                if (hasQueuedPredecessors()) // 如果线程位于CLH队首则返回-1
                     return -1;
                 int available = getState();
-                int remaining = available - acquires;
-                if (remaining < 0 ||
-                    compareAndSetState(available, remaining))
+                int remaining = available - acquires; //
+                if (remaining < 0 || // 要申请的信号量大于已有的信号量也返回
+                    compareAndSetState(available, remaining)) // 申请信号量后还有多余的信号量则用CAS替换
                     return remaining;
             }
         }

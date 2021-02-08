@@ -549,7 +549,7 @@ public class Phaser {
      * or greater than the maximum number of parties supported
      */
     public Phaser(Phaser parent, int parties) {
-        if (parties >>> PARTIES_SHIFT != 0)
+        if (parties >>> PARTIES_SHIFT != 0) // parties 不能大于 2 的 16 次方
             throw new IllegalArgumentException("Illegal number of parties");
         int phase = 0;
         this.parent = parent;
@@ -567,9 +567,9 @@ public class Phaser {
             this.oddQ = new AtomicReference<QNode>();
         }
         this.state = (parties == 0) ? (long)EMPTY :
-            ((long)phase << PHASE_SHIFT) |
-            ((long)parties << PARTIES_SHIFT) |
-            ((long)parties);
+            ((long)phase << PHASE_SHIFT) | // 32-48bit 存储父Phaser的state
+            ((long)parties << PARTIES_SHIFT) | // 16-32bit 存储一份当前Phaser的state
+            ((long)parties); // 0-16bit 也存储一份当前Phaser的state
     }
 
     /**
@@ -676,16 +676,16 @@ public class Phaser {
         // Specialization of doArrive+awaitAdvance eliminating some reads/paths
         final Phaser root = this.root;
         for (;;) {
-            long s = (root == this) ? state : reconcileState();
+            long s = (root == this) ? state : reconcileState(); // 获取当前状态 这里逻辑与是否组合父Phaser有关
             int phase = (int)(s >>> PHASE_SHIFT);
-            if (phase < 0)
+            if (phase < 0) // TODO 与父root有关
                 return phase;
             int counts = (int)s;
-            int unarrived = (counts == EMPTY) ? 0 : (counts & UNARRIVED_MASK);
+            int unarrived = (counts == EMPTY) ? 0 : (counts & UNARRIVED_MASK); // 计算未到达的任务数
             if (unarrived <= 0)
                 throw new IllegalStateException(badArrive(s));
             if (UNSAFE.compareAndSwapLong(this, stateOffset, s,
-                                          s -= ONE_ARRIVAL)) {
+                                          s -= ONE_ARRIVAL)) { // CAS 修改 state 为 state - 1
                 if (unarrived > 1)
                     return root.internalAwaitAdvance(phase, null);
                 if (root != this)

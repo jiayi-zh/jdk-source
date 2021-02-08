@@ -148,8 +148,8 @@ public class CyclicBarrier {
      * There need not be an active generation if there has been a break
      * but no subsequent reset.
      */
-    private static class Generation {
-        boolean broken = false;
+    private static class Generation { // Generation描述着CyclicBarrier的更显换代，在CyclicBarrier中，同一批线程属于同一代。当有parties个线程到达barrier，generation就会被更新换代。
+        boolean broken = false; // 标识该当前CyclicBarrier是否已经处于中断状态
     }
 
     /** The lock for guarding barrier entry */
@@ -161,7 +161,7 @@ public class CyclicBarrier {
     /* The command to run when tripped */
     private final Runnable barrierCommand;
     /** The current generation */
-    private Generation generation = new Generation();
+    private Generation generation = new Generation(); // @see java.util.concurrent.CyclicBarrier.Generation 注释
 
     /**
      * Number of parties still waiting. Counts down from parties to 0
@@ -199,27 +199,27 @@ public class CyclicBarrier {
         throws InterruptedException, BrokenBarrierException,
                TimeoutException {
         final ReentrantLock lock = this.lock;
-        lock.lock();
+        lock.lock(); // 获取 独占锁
         try {
             final Generation g = generation;
 
             if (g.broken)
                 throw new BrokenBarrierException();
 
-            if (Thread.interrupted()) {
-                breakBarrier();
-                throw new InterruptedException();
+            if (Thread.interrupted()) { // 如果线程被标记为中断
+                breakBarrier(); // 设置 generation.broken = true 这样其余的任务都会抛出 BrokenBarrierException
+                throw new InterruptedException(); // 当前线程会抛出 InterruptedException
             }
 
             int index = --count;
-            if (index == 0) {  // tripped
+            if (index == 0) {  // tripped // 所有子任务都执行到 await
                 boolean ranAction = false;
                 try {
                     final Runnable command = barrierCommand;
                     if (command != null)
-                        command.run();
+                        command.run(); // 如果 command 抛出异常, 会导致子任务都抛出 BrokenBarrierException 而退出
                     ranAction = true;
-                    nextGeneration();
+                    nextGeneration(); // 唤醒所有等待的线程, 重置 count
                     return 0;
                 } finally {
                     if (!ranAction)
@@ -230,10 +230,10 @@ public class CyclicBarrier {
             // loop until tripped, broken, interrupted, or timed out
             for (;;) {
                 try {
-                    if (!timed)
+                    if (!timed) // 如果不是超时等待，则调用await等待
                         trip.await();
                     else if (nanos > 0L)
-                        nanos = trip.awaitNanos(nanos);
+                        nanos = trip.awaitNanos(nanos); // 调用awaitNanos等待
                 } catch (InterruptedException ie) {
                     if (g == generation && ! g.broken) {
                         breakBarrier();
@@ -249,10 +249,10 @@ public class CyclicBarrier {
                 if (g.broken)
                     throw new BrokenBarrierException();
 
-                if (g != generation)
+                if (g != generation) // generation 已经更新返回 index
                     return index;
 
-                if (timed && nanos <= 0L) {
+                if (timed && nanos <= 0L) { // 等待已超时则抛出 TimeoutException 异常
                     breakBarrier();
                     throw new TimeoutException();
                 }

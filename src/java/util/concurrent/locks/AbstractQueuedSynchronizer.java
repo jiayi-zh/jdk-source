@@ -384,16 +384,16 @@ public abstract class AbstractQueuedSynchronizer
         static final Node EXCLUSIVE = null;
 
         /** waitStatus value to indicate thread has cancelled */
-        static final int CANCELLED =  1;
+        static final int CANCELLED =  1; // 线程已被取消
         /** waitStatus value to indicate successor's thread needs unparking */
-        static final int SIGNAL    = -1;
+        static final int SIGNAL    = -1; // 当前线程的后继线程需要被unpark(唤醒)
         /** waitStatus value to indicate thread is waiting on condition */
-        static final int CONDITION = -2;
+        static final int CONDITION = -2; // 线程(处在Condition休眠状态)在等待Condition唤醒
         /**
          * waitStatus value to indicate the next acquireShared should
          * unconditionally propagate
          */
-        static final int PROPAGATE = -3;
+        static final int PROPAGATE = -3; // 下一个 acquireShared 应该无条件传播
 
         /**
          * Status field, taking on only the values:
@@ -683,13 +683,13 @@ public abstract class AbstractQueuedSynchronizer
             Node h = head;
             if (h != null && h != tail) {
                 int ws = h.waitStatus;
-                if (ws == Node.SIGNAL) {
-                    if (!compareAndSetWaitStatus(h, Node.SIGNAL, 0))
+                if (ws == Node.SIGNAL) { // 如果头结点的状态为 SIGNAL, 则
+                    if (!compareAndSetWaitStatus(h, Node.SIGNAL, 0)) // 使用CAS修改头结点状态为 0
                         continue;            // loop to recheck cases
-                    unparkSuccessor(h);
+                    unparkSuccessor(h); // 唤醒头节点
                 }
                 else if (ws == 0 &&
-                         !compareAndSetWaitStatus(h, 0, Node.PROPAGATE))
+                         !compareAndSetWaitStatus(h, 0, Node.PROPAGATE)) // 如果头节点的状态为0, 则设置头节点状态为无条件传播
                     continue;                // loop on failed CAS
             }
             if (h == head)                   // loop if head changed
@@ -854,7 +854,7 @@ public abstract class AbstractQueuedSynchronizer
      * @param arg the acquire argument
      * @return {@code true} if interrupted while waiting
      */
-    final boolean acquireQueued(final Node node, int arg) {
+    final boolean acquireQueued(final Node node, int arg) { // 当前线程会根据公平性原则来进行阻塞等待, 直到获取锁为止  返回值 - 当前线程在等待过程中有没有中断过
         boolean failed = true;
         try {
             boolean interrupted = false; // 线程中断标志位, 只有线程被 interrupt 才会导致此方法返回false
@@ -979,12 +979,12 @@ public abstract class AbstractQueuedSynchronizer
      */
     private void doAcquireSharedInterruptibly(int arg)
         throws InterruptedException {
-        final Node node = addWaiter(Node.SHARED);
+        final Node node = addWaiter(Node.SHARED); // 创建一个Node.SHARED节点，并尾插到CLH队列
         boolean failed = true;
         try {
             for (;;) {
-                final Node p = node.predecessor();
-                if (p == head) {
+                final Node p = node.predecessor(); // 获取前驱节点
+                if (p == head) { // 如果前驱节点为头结点, 线程将尝试获取锁(公平锁与非公平锁在这里会有不同)
                     int r = tryAcquireShared(arg);
                     if (r >= 0) {
                         setHeadAndPropagate(node, r);
@@ -1196,8 +1196,8 @@ public abstract class AbstractQueuedSynchronizer
      */
     public final void acquire(int arg) { // 独占锁 加锁
         if (!tryAcquire(arg) && // 调用子类重写的 tryAcquire 方法, 加锁成功直接跳出
-            acquireQueued(addWaiter(Node.EXCLUSIVE), arg)) // tryAcquire 失败,
-            selfInterrupt();
+            acquireQueued(addWaiter(Node.EXCLUSIVE), arg)) // addWaiter - 将当前线程尾插到CLH队列, acquireQueued - 见方法
+            selfInterrupt(); // 产生一个中断
     }
 
     /**
@@ -1300,7 +1300,7 @@ public abstract class AbstractQueuedSynchronizer
             throws InterruptedException {
         if (Thread.interrupted())
             throw new InterruptedException();
-        if (tryAcquireShared(arg) < 0)
+        if (tryAcquireShared(arg) < 0) // 执行子类复写的 tryAcquireShared 方法
             doAcquireSharedInterruptibly(arg);
     }
 
@@ -1338,7 +1338,7 @@ public abstract class AbstractQueuedSynchronizer
      * @return the value returned from {@link #tryReleaseShared}
      */
     public final boolean releaseShared(int arg) {
-        if (tryReleaseShared(arg)) {
+        if (tryReleaseShared(arg)) { // 尝试释放锁
             doReleaseShared();
             return true;
         }
@@ -1509,7 +1509,7 @@ public abstract class AbstractQueuedSynchronizer
      *         is at the head of the queue or the queue is empty
      * @since 1.7
      */
-    public final boolean hasQueuedPredecessors() { // 等待队列中第一个元素不是当前线程并且队列中有排队的线程
+    public final boolean hasQueuedPredecessors() { // 判断该线程是否位于CLH队列的列头
         // The correctness of this depends on head being initialized
         // before tail and on head.next being accurate if the current
         // thread is first in queue.
