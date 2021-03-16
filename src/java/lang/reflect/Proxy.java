@@ -413,10 +413,10 @@ public class Proxy implements java.io.Serializable {
             throw new IllegalArgumentException("interface limit exceeded");
         }
 
-        // If the proxy class defined by the given loader implementing
+        // If the proxy class defined by the given loader implementing 
         // the given interfaces exists, this will simply return the cached copy;
         // otherwise, it will create the proxy class via the ProxyClassFactory
-        return proxyClassCache.get(loader, interfaces);
+        return proxyClassCache.get(loader, interfaces); // 缓存中存在直接返回，不存在则由 ProxyClassFactory 创建
     }
 
     /*
@@ -574,7 +574,7 @@ public class Proxy implements java.io.Serializable {
                  */
                 Class<?> interfaceClass = null;
                 try {
-                    interfaceClass = Class.forName(intf.getName(), false, loader);
+                    interfaceClass = Class.forName(intf.getName(), false, loader); // 加载待代理
                 } catch (ClassNotFoundException e) {
                 }
                 if (interfaceClass != intf) {
@@ -585,7 +585,7 @@ public class Proxy implements java.io.Serializable {
                  * Verify that the Class object actually represents an
                  * interface.
                  */
-                if (!interfaceClass.isInterface()) {
+                if (!interfaceClass.isInterface()) { // 被代理对象实现的接口
                     throw new IllegalArgumentException(
                         interfaceClass.getName() + " is not an interface");
                 }
@@ -624,23 +624,23 @@ public class Proxy implements java.io.Serializable {
 
             if (proxyPkg == null) {
                 // if no non-public proxy interfaces, use com.sun.proxy package
-                proxyPkg = ReflectUtil.PROXY_PACKAGE + ".";
+                proxyPkg = ReflectUtil.PROXY_PACKAGE + "."; // 生成代理类的包名
             }
 
             /*
              * Choose a name for the proxy class to generate.
              */
             long num = nextUniqueNumber.getAndIncrement();
-            String proxyName = proxyPkg + proxyClassNamePrefix + num;
+            String proxyName = proxyPkg + proxyClassNamePrefix + num; // 代理类的类名
 
             /*
              * Generate the specified proxy class.
              */
             byte[] proxyClassFile = ProxyGenerator.generateProxyClass(
-                proxyName, interfaces, accessFlags);
+                proxyName, interfaces, accessFlags); // 根据类名、代理接口、修饰符等信息，生成代理类, 实际上可以理解为生成.class文件
             try {
                 return defineClass0(loader, proxyName,
-                                    proxyClassFile, 0, proxyClassFile.length);
+                                    proxyClassFile, 0, proxyClassFile.length); // 根据生成的.class文件，返回一个代理类Class。此方法为native方法
             } catch (ClassFormatError e) {
                 /*
                  * A ClassFormatError here means that (barring bugs in the
@@ -716,7 +716,7 @@ public class Proxy implements java.io.Serializable {
         /*
          * Look up or generate the designated proxy class.
          */
-        Class<?> cl = getProxyClass0(loader, intfs);
+        Class<?> cl = getProxyClass0(loader, intfs); // 获取 Proxy 的 Class 对象, 该 Class 对象继承 Proxy 并且将 InvocationHandler 在构造时传给了 Proxy
 
         /*
          * Invoke its constructor with the designated invocation handler.
@@ -726,7 +726,7 @@ public class Proxy implements java.io.Serializable {
                 checkNewProxyPermission(Reflection.getCallerClass(), cl);
             }
 
-            final Constructor<?> cons = cl.getConstructor(constructorParams);
+            final Constructor<?> cons = cl.getConstructor(constructorParams); // 获取 Proxy 的 InvocationHandler 带参构造器
             final InvocationHandler ih = h;
             if (!Modifier.isPublic(cl.getModifiers())) {
                 AccessController.doPrivileged(new PrivilegedAction<Void>() {
@@ -736,7 +736,7 @@ public class Proxy implements java.io.Serializable {
                     }
                 });
             }
-            return cons.newInstance(new Object[]{h});
+            return cons.newInstance(new Object[]{h}); // 生成 Proxy 代理对象
         } catch (IllegalAccessException|InstantiationException e) {
             throw new InternalError(e.toString(), e);
         } catch (InvocationTargetException e) {

@@ -124,7 +124,7 @@ final class WeakCache<K, P, V> {
         while (true) {
             if (supplier != null) {
                 // supplier might be a Factory or a CacheValue<V> instance
-                V value = supplier.get();
+                V value = supplier.get(); // 生成 Proxy 对象
                 if (value != null) {
                     return value;
                 }
