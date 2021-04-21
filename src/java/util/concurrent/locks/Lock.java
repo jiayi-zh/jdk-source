@@ -181,7 +181,7 @@ public interface Lock {
      * circumstances and the exception type must be documented by that
      * {@code Lock} implementation.
      */
-    void lock();
+    void lock(); // 无条件获取锁
 
     /**
      * Acquires the lock unless the current thread is
@@ -229,7 +229,7 @@ public interface Lock {
      *         interrupted while acquiring the lock (and interruption
      *         of lock acquisition is supported)
      */
-    void lockInterruptibly() throws InterruptedException;
+    void lockInterruptibly() throws InterruptedException; // 可中断的获取锁
 
     /**
      * Acquires the lock only if it is free at the time of invocation.
@@ -258,7 +258,7 @@ public interface Lock {
      * @return {@code true} if the lock was acquired and
      *         {@code false} otherwise
      */
-    boolean tryLock();
+    boolean tryLock(); // 可轮询的获取锁
 
     /**
      * Acquires the lock if it is free within the given waiting time and the
@@ -318,7 +318,7 @@ public interface Lock {
      *         while acquiring the lock (and interruption of lock
      *         acquisition is supported)
      */
-    boolean tryLock(long time, TimeUnit unit) throws InterruptedException;
+    boolean tryLock(long time, TimeUnit unit) throws InterruptedException; // 定时的获取锁
 
     /**
      * Releases the lock.
@@ -353,5 +353,5 @@ public interface Lock {
      * @throws UnsupportedOperationException if this {@code Lock}
      *         implementation does not support conditions
      */
-    Condition newCondition();
+    Condition newCondition(); // 条件队列
 }

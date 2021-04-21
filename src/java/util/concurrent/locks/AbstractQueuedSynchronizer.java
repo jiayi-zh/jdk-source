@@ -379,16 +379,16 @@ public abstract class AbstractQueuedSynchronizer
      */
     static final class Node {
         /** Marker to indicate a node is waiting in shared mode */
-        static final Node SHARED = new Node();
+        static final Node SHARED = new Node(); // 共享
         /** Marker to indicate a node is waiting in exclusive mode */
-        static final Node EXCLUSIVE = null;
+        static final Node EXCLUSIVE = null; // 独占
 
         /** waitStatus value to indicate thread has cancelled */
-        static final int CANCELLED =  1; // 线程已被取消
+        static final int CANCELLED =  1; // 因为超时或者中断，节点会被设置为取消状态，被取消的节点时不会参与到竞争中的，他会一直保持取消状态不会转变为其他状态
         /** waitStatus value to indicate successor's thread needs unparking */
-        static final int SIGNAL    = -1; // 当前线程的后继线程需要被unpark(唤醒)
+        static final int SIGNAL    = -1; // 后继节点的线程处于等待状态，而当前节点的线程如果释放了同步状态或者被取消，将会通知后继节点，使后继节点的线程得以运行
         /** waitStatus value to indicate thread is waiting on condition */
-        static final int CONDITION = -2; // 线程(处在Condition休眠状态)在等待Condition唤醒
+        static final int CONDITION = -2; // 节点在等待队列中，节点线程等待在Condition上，当其他线程对Condition调用了signal()后，改节点将会从等待队列中转移到同步队列中，加入到同步状态的获取中
         /**
          * waitStatus value to indicate the next acquireShared should
          * unconditionally propagate
@@ -429,7 +429,7 @@ public abstract class AbstractQueuedSynchronizer
          * CONDITION for condition nodes.  It is modified using CAS
          * (or when possible, unconditional volatile writes).
          */
-        volatile int waitStatus;
+        volatile int waitStatus; // 等待状态
 
         /**
          * Link to predecessor node that current node/thread relies on
@@ -442,7 +442,7 @@ public abstract class AbstractQueuedSynchronizer
          * cancelled thread never succeeds in acquiring, and a thread only
          * cancels itself, not any other node.
          */
-        volatile Node prev;
+        volatile Node prev; //  前驱节点
 
         /**
          * Link to the successor node that the current node/thread
@@ -457,13 +457,13 @@ public abstract class AbstractQueuedSynchronizer
          * point to the node itself instead of null, to make life
          * easier for isOnSyncQueue.
          */
-        volatile Node next;
+        volatile Node next; // 后继节点
 
         /**
          * The thread that enqueued this node.  Initialized on
          * construction and nulled out after use.
          */
-        volatile Thread thread;
+        volatile Thread thread; // 获取同步状态的线程
 
         /**
          * Link to next node waiting on condition, or the special
@@ -654,7 +654,7 @@ public abstract class AbstractQueuedSynchronizer
         Node s = node.next;
         if (s == null || s.waitStatus > 0) { // 若后续节点为空或已被cancel，则从尾部开始找到队列中第一个waitStatus<=0，即未被cancel的节点
             s = null;
-            for (Node t = tail; t != null && t != node; t = t.prev)
+            for (Node t = tail; t != null && t != node; t = t.prev) // 这里是
                 if (t.waitStatus <= 0)
                     s = t;
         }
