@@ -581,13 +581,13 @@ public abstract class AbstractQueuedSynchronizer
      * @return node's predecessor
      */
     private Node enq(final Node node) {
-        for (;;) {
+        for (;;) { // 死循环
             Node t = tail;
-            if (t == null) { // Must initialize
+            if (t == null) { // Must initialize // 如果发现没有尾节点, 每个线程都会尝试将自己设置为头节点
                 if (compareAndSetHead(new Node()))
                     tail = head;
             } else {
-                node.prev = t;
+                node.prev = t; // 如果存在尾节点, 则将自己设置为尾节点
                 if (compareAndSetTail(t, node)) {
                     t.next = node;
                     return t;
@@ -603,17 +603,17 @@ public abstract class AbstractQueuedSynchronizer
      * @return the new node
      */
     private Node addWaiter(Node mode) {
-        Node node = new Node(Thread.currentThread(), mode);
+        Node node = new Node(Thread.currentThread(), mode); // 将当前线程封装成一个 Node 节点准备插入队列
         // Try the fast path of enq; backup to full enq on failure
         Node pred = tail;
-        if (pred != null) { // 获取最后一个节点, CAS 尾插节点
+        if (pred != null) {
             node.prev = pred;
-            if (compareAndSetTail(pred, node)) {
-                pred.next = node;
+            if (compareAndSetTail(pred, node)) { // 每个线程都认为自己是尾节点， 获取CLH队列的尾节点，CAS 将自己设置为尾节点
+                pred.next = node; // 如果设置成功, 修改之前的尾节点指向自己
                 return node;
             }
         }
-        enq(node); // 初始化CLH, 将节点追加到队列尾
+        enq(node); // 进入条件: CLH为空 || 将当前节点CAS设置尾节点失败
         return node;
     }
 
@@ -852,15 +852,15 @@ public abstract class AbstractQueuedSynchronizer
      *
      * @param node the node
      * @param arg the acquire argument
-     * @return {@code true} if interrupted while waiting
+     * @return {@code true} if interrupted while waiting // 是否
      */
     final boolean acquireQueued(final Node node, int arg) { // 当前线程会根据公平性原则来进行阻塞等待, 直到获取锁为止  返回值 - 当前线程在等待过程中有没有中断过
         boolean failed = true;
         try {
-            boolean interrupted = false; // 线程中断标志位, 只有线程被 interrupt 才会导致此方法返回false
+            boolean interrupted = false; // 线程中断标志位, 只有线程被 interrupt 才会导致此方法返回 false
             for (;;) {
-                final Node p = node.predecessor();
-                if (p == head && tryAcquire(arg)) { // 如果当前线程是head的直接后继则尝试获取锁, 这里不会和等待队列中其它线程发生竞争，但会和尝试获取锁并且未进入等待队列的线程发生竞争, 这是非公平锁和公平锁的一个重要区别
+                final Node p = node.predecessor(); // 获取当前节点的前继节点
+                if (p == head && tryAcquire(arg)) { // 如果前继节点为头节点， 如果当前线程是head的直接后继则尝试获取锁, 这里不会和等待队列中其它线程发生竞争，但会和尝试获取锁并且未进入等待队列的线程发生竞争, 这是非公平锁和公平锁的一个重要区别
                     setHead(node); // 将当前结点设置为头结点
                     p.next = null; // help GC
                     failed = false;
@@ -1196,8 +1196,8 @@ public abstract class AbstractQueuedSynchronizer
      */
     public final void acquire(int arg) { // 独占锁 加锁
         if (!tryAcquire(arg) && // 调用子类重写的 tryAcquire 方法, 加锁成功直接跳出
-            acquireQueued(addWaiter(Node.EXCLUSIVE), arg)) // addWaiter - 将当前线程尾插到CLH队列, acquireQueued - 见方法
-            selfInterrupt(); // 产生一个中断
+            acquireQueued(addWaiter(Node.EXCLUSIVE), arg)) // addWaiter - 将当前线程尾插到CLH队列, acquireQueued - 以轮询的方式不断地从CLH中获取待执行线程
+            selfInterrupt(); // 如果在等待过程中产生了中断信号，在出队的时候需要响应中断
     }
 
     /**
@@ -1216,7 +1216,7 @@ public abstract class AbstractQueuedSynchronizer
      */
     public final void acquireInterruptibly(int arg)
             throws InterruptedException {
-        if (Thread.interrupted())
+        if (Thread.interrupted()) // 竞争锁之前检测线程是否已中断
             throw new InterruptedException();
         if (!tryAcquire(arg))
             doAcquireInterruptibly(arg);
@@ -1509,15 +1509,15 @@ public abstract class AbstractQueuedSynchronizer
      *         is at the head of the queue or the queue is empty
      * @since 1.7
      */
-    public final boolean hasQueuedPredecessors() { // 判断该线程是否位于CLH队列的列头
+    public final boolean hasQueuedPredecessors() { // 判断当前线程是否需要排队
         // The correctness of this depends on head being initialized
         // before tail and on head.next being accurate if the current
         // thread is first in queue.
         Node t = tail; // Read fields in reverse initialization order
         Node h = head;
         Node s;
-        return h != t && //
-            ((s = h.next) == null || s.thread != Thread.currentThread()); //
+        return h != t && // h != t 为 flase 表示队列中只有一个线程, 这个线程也正在竞争锁， 所以不需要排队; h != t 为 true 表示有至少一个线程在排队，所以这个时候需要判断这个排队的线程是否是当前线程
+            ((s = h.next) == null || s.thread != Thread.currentThread()); // s.thread != Thread.currentThread() 为true表示CLH中下一个要参与竞争的线程不是当前线程, 需要排队
     }
 
 

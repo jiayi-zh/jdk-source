@@ -129,13 +129,13 @@ public class ReentrantLock implements Lock, java.io.Serializable {
         final boolean nonfairTryAcquire(int acquires) {
             final Thread current = Thread.currentThread();
             int c = getState();
-            if (c == 0) {
+            if (c == 0) { // 没有线程持有锁
                 if (compareAndSetState(0, acquires)) {
                     setExclusiveOwnerThread(current);
                     return true;
                 }
             }
-            else if (current == getExclusiveOwnerThread()) { // 这里只有持有锁的线程才可以重入, 其他线程都会加锁失败
+            else if (current == getExclusiveOwnerThread()) { // 这里只有持有锁的线程才可以重入, 其他线程都会加锁失败， 所以里面的逻辑加操作也是安全的
                 int nextc = c + acquires;
                 if (nextc < 0) // overflow
                     throw new Error("Maximum lock count exceeded");
@@ -232,9 +232,9 @@ public class ReentrantLock implements Lock, java.io.Serializable {
             final Thread current = Thread.currentThread();
             int c = getState();
             if (c == 0) {
-                if (!hasQueuedPredecessors() && // 判断当前线程是不是CLH队列中的第一个线程
-                    compareAndSetState(0, acquires)) { // 如果是 则设置锁状态
-                    setExclusiveOwnerThread(current); // 设置当前线程为锁持有线程
+                if (!hasQueuedPredecessors() && // 判断当前线程是否需要排队，祥见方法
+                    compareAndSetState(0, acquires)) { // 如果不需要排队则参与竞争, CAS设置锁状态
+                    setExclusiveOwnerThread(current); // 设置成功则获取锁成功
                     return true;
                 }
             }
