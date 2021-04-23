@@ -587,9 +587,9 @@ public abstract class AbstractQueuedSynchronizer
                 if (compareAndSetHead(new Node()))
                     tail = head;
             } else {
-                node.prev = t; // 如果存在尾节点, 则将自己设置为尾节点
-                if (compareAndSetTail(t, node)) {
-                    t.next = node;
+                node.prev = t; // 如果存在尾节点, 每个需要加入CLH队列的 Node 都认为自己的 tail, 将自己指向 tail 节点
+                if (compareAndSetTail(t, node)) { // CAS 修改当前节点为 tail 节点
+                    t.next = node; // 修改成功, 则将 之前的 tail 的 next 指向自己。注意：这里可能会发送上下文切换, 导致之前的 tail 节点的 next 节点为空，但是实际上已经有排队的节点指向了它，所以在释放锁的时候需要从后往前遍历
                     return t;
                 }
             }
@@ -654,7 +654,7 @@ public abstract class AbstractQueuedSynchronizer
         Node s = node.next;
         if (s == null || s.waitStatus > 0) { // 若后续节点为空或已被cancel，则从尾部开始找到队列中第一个waitStatus<=0，即未被cancel的节点
             s = null;
-            for (Node t = tail; t != null && t != node; t = t.prev) // 这里是
+            for (Node t = tail; t != null && t != node; t = t.prev) // 从后往前找的原因：详见 enq(node) 方法
                 if (t.waitStatus <= 0)
                     s = t;
         }
@@ -1300,7 +1300,7 @@ public abstract class AbstractQueuedSynchronizer
             throws InterruptedException {
         if (Thread.interrupted())
             throw new InterruptedException();
-        if (tryAcquireShared(arg) < 0) // 执行子类复写的 tryAcquireShared 方法
+        if (tryAcquireShared(arg) < 0) // 执行子类复写的 tryAcquireShared 方法, 大于 0 则表示获取到锁
             doAcquireSharedInterruptibly(arg);
     }
 
@@ -2033,7 +2033,7 @@ public abstract class AbstractQueuedSynchronizer
             if (Thread.interrupted())
                 throw new InterruptedException();
             Node node = addConditionWaiter(); // 将当前线程封装为waiter node并添加到等待队列
-            int savedState = fullyRelease(node); // TODO
+            int savedState = fullyRelease(node); // 释放锁并返回重入次数
             int interruptMode = 0;
             while (!isOnSyncQueue(node)) {
                 LockSupport.park(this);

@@ -310,7 +310,7 @@ public class ThreadLocal<T> {
             Object value;
 
             Entry(ThreadLocal<?> k, Object v) {
-                super(k);
+                super(k);    // key 为弱引用, GC 后可能会导致值没释放, 造成内存泄露
                 value = v;
             }
         }
@@ -464,7 +464,7 @@ public class ThreadLocal<T> {
 
             for (Entry e = tab[i];
                  e != null;
-                 e = tab[i = nextIndex(i, len)]) {
+                 e = tab[i = nextIndex(i, len)]) { // 使用开放定址法存储
                 ThreadLocal<?> k = e.get();
 
                 if (k == key) {

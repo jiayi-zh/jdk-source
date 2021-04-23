@@ -265,9 +265,9 @@ public class ReentrantReadWriteLock
         static final int EXCLUSIVE_MASK = (1 << SHARED_SHIFT) - 1;
 
         /** Returns the number of shared holds represented in count  */
-        static int sharedCount(int c)    { return c >>> SHARED_SHIFT; } // 高16位表示读锁的数量
+        static int sharedCount(int c)    { return c >>> SHARED_SHIFT; } // 高16位表示读锁的重入次数
         /** Returns the number of exclusive holds represented in count  */
-        static int exclusiveCount(int c) { return c & EXCLUSIVE_MASK; } // 低16位表示写锁的数量
+        static int exclusiveCount(int c) { return c & EXCLUSIVE_MASK; } // 低16位表示写锁的重入次数
 
         /**
          * A counter for per-thread read hold counts.
